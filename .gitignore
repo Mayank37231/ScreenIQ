@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.env
+.venv/
+backend/.deps/
+backend/deps/
+db.sqlite3
+node_modules/
+.next/
+out/
+coverage/
+.DS_Store
