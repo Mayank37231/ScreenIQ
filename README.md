@@ -36,29 +36,6 @@ npm run dev
 
 Open `http://localhost:3000/screen`, paste the JWT access token, then submit screenings. The dashboard is at `http://localhost:3000/dashboard`.
 
-## Bugs Fixed
-
-- Unsafe request access: the starter used `request.data['job_description']` and `request.data['resume']`, which throws `KeyError` and returns a 500 for malformed input. I replaced it with `ScreenCandidateSerializer`, so missing or blank fields return clear 400 validation errors.
-- Missing authentication: the screening endpoint created rows with `request.user` but did not require an authenticated user. I added `IsAuthenticated`, matching the JWT requirement and preventing anonymous writes.
-- Deprecated/fragile OpenAI call shape: the starter used the older `openai.ChatCompletion.create` style. The implementation uses the current `OpenAI` client when `AI_PROVIDER=openai`.
-- Prompt ignored the job description: the starter scored only the resume, making the output unreliable. The new prompt compares both job description and resume.
-- Unstructured score storage: the starter saved raw model text into `ai_score`, making values like `7.3`, `Seven`, and long prose hard for the UI to render. The backend now normalizes to a decimal score and stores reasons separately.
-- Incorrect success status: the starter returned `200 OK` after creating a new row. The fixed endpoint returns `201 Created`.
-- Data leakage in application list: the starter used `Application.objects.all()`, exposing every user's screenings. The list and detail views now filter by `created_by=request.user`.
-
-Short comments describing these fixes are also included directly in `backend/applications/views.py`.
-
-## AI Prompt Design
-
-The screening prompt uses a system message to constrain the model to job-relevant evidence and explicitly ignore protected or proxy attributes. The user message includes both the job description and resume, asks for strict JSON, and requires a `1-10` score plus exactly three concise reasons. JSON output keeps parsing deterministic, while the reasons force the model to expose fit, gaps, and evidence rather than returning a bare number.
-
-## Security Vulnerability
-
-The vulnerable code returned `Application.objects.all()` to any authenticated user, which is an object-level authorization flaw. In HR software this could expose resumes, scores, and screening notes across teams or tenants. The fix filters every list and detail query by `created_by=request.user`, so users can only access applications they created.
-
-## Frontend State Management
-
-I used local React state with `useState` because the form, streaming text, token input, and selected dashboard row are page-local concerns. A global store would add complexity without solving a real sharing problem here; if the app later adds full auth flows, shared filters, or cross-page candidate workflows, a small context or query cache would become more useful.
 
 ## Dashboard Pagination
 
